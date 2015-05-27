@@ -98,41 +98,42 @@ int main(void)
 
 void showInventory (void)
 {  
+	char itemCode[6];
+	char itemName[20];
+	double itemPrice;
+	int quantity;
 
-				char itemCode[6];
-				char itemName[20];
-				double itemPrice;
-				int quantity;
+    printf("GST included Items\n");
+    if ((gstText = fopen("gst.txt", "r")) == NULL ) {
+		puts("The file 'gst.txt' could not be opened");
+		puts("Please contact your system administrator.");
+	}
+	else {
+		printf("%s \t %s \t %s \t %s \n", "Item Code", "Item Name", "Item Price", "Quantity");
 
-				    printf("GST included Items\n");
-				    if ((gstText = fopen("gst.txt", "r")) == NULL ){
-						puts("File could not be opened");
-					}
-					else {
-						printf("%s \t %s \t %s \t %s \n", "Item Code", "Item Name", "Item Price", "Quantity");
+		while (!feof(gstText)){
+			fscanf(gstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &itemPrice, &quantity);
+			printf("%s \t %s \t %.2lf \t %d \n", itemCode, itemName, itemPrice, quantity);
+		}
 
-						while (!feof(gstText)){
-							fscanf(gstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &itemPrice, &quantity);
-							printf("%s \t %s \t %.2lf \t %d \n", itemCode, itemName, itemPrice, quantity);
-						}
+		fclose(gstText);
+	}
 
-						fclose(gstText);
-					}
+	printf("Non-GST included Items\n");
+    if ((ngstText = fopen("ngst.txt", "r")) ==NULL ) {
+		puts("The file 'ngst.txt' could not be opened");
+		puts("Please contact your system administrator.");
+	}
+	else {
+		printf("%s \t %s \t %s \t %s\n", "Item Code", "Item Name", "Item Price", "Quantity");
 
-					printf("Non-GST included Items\n");
-				    if ((ngstText = fopen("ngst.txt", "r")) ==NULL ){
-						puts("File could not be opened");
-					}
-					else {
-						printf("%s \t %s \t %s \t %s\n", "Item Code", "Item Name", "Item Price", "Quantity");
+		while (!feof(ngstText)){
+			fscanf(ngstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &itemPrice, &quantity);
+	    	printf("%s \t %s \t %.2lf \t %d \n", itemCode, itemName, itemPrice, quantity);
+		}
 
-						while (!feof(ngstText)){
-							fscanf(ngstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &itemPrice, &quantity);
-					    	printf("%s \t %s \t %.2lf \t %d \n", itemCode, itemName, itemPrice, quantity);
-						}
-
-						fclose(ngstText);
-					}
+		fclose(ngstText);
+	}
 
 }
 
@@ -153,9 +154,21 @@ void purchase(void)
 	double total;
 	double roundedTotal;
 	
-	gstText = fopen("gst.txt", "r");
-	ngstText = fopen("ngst.txt", "r");
-	transactionsText = fopen("transactions.txt", "w");
+	if ((gstText = fopen("gst.txt", "r")) == NULL ) {
+		puts("The file 'gst.txt' could not be opened");
+		puts("Please contact your system administrator.");
+		return;
+	}
+	else if ((ngstText = fopen("ngst.txt", "r")) == NULL ) {
+		puts("The file 'ngst.txt' could not be opened");
+		puts("Please contact your system administrator.");
+		return;
+	}
+	else if ((transactionsText = fopen("transactions.txt", "w")) == NULL) {
+		puts("The file 'transactions.txt' could not be opened");
+		puts("Please contact your system administrator.");
+		return;
+	}
 
 	itemFound = NO;
 
