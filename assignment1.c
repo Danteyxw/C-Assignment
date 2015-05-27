@@ -24,11 +24,10 @@ int gstTransactions;
 int ngstTransactions;
 double gstSales;	// gst not included
 double ngstSales;
-int flush;
 
 void purchase(void);
-
 void showInventory(void);
+void showTransactions(void);
 
 int main(void)
 {
@@ -78,7 +77,7 @@ int main(void)
 				break;
 				
 			case 6:
-				puts("stub here");
+				showTransactions();
 				break;
 				
 			case 7:
@@ -94,47 +93,6 @@ int main(void)
 	}
 			
 	return 0;
-}
-
-void showInventory (void)
-{  
-	char itemCode[6];
-	char itemName[20];
-	double itemPrice;
-	int quantity;
-
-    puts("GST included Items");
-    if ((gstText = fopen("gst.txt", "r")) == NULL ) {
-		puts("The file 'gst.txt' could not be opened");
-		puts("Please contact your system administrator.");
-	}
-	else {
-		printf("%s \t %s \t %s \t %s \n", "Item Code", "Item Name", "Item Price", "Quantity");
-
-		while (!feof(gstText)){
-			fscanf(gstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &itemPrice, &quantity);
-			printf("%s \t %s \t %.2lf \t %d \n", itemCode, itemName, itemPrice, quantity);
-		}
-
-		fclose(gstText);
-	}
-
-	puts("Non-GST included Items");
-    if ((ngstText = fopen("ngst.txt", "r")) ==NULL ) {
-		puts("The file 'ngst.txt' could not be opened");
-		puts("Please contact your system administrator.");
-	}
-	else {
-		printf("%s \t %s \t %s \t %s\n", "Item Code", "Item Name", "Item Price", "Quantity");
-
-		while (!feof(ngstText)){
-			fscanf(ngstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &itemPrice, &quantity);
-	    	printf("%s \t %s \t %.2lf \t %d \n", itemCode, itemName, itemPrice, quantity);
-		}
-
-		fclose(ngstText);
-	}
-
 }
 
 void purchase(void)
@@ -182,19 +140,25 @@ void purchase(void)
 	printf("Enter the item code: ");
 	scanf("%s", itemCodeInput);
 	while(strcmp(itemCodeInput, "-1") && strcmp(itemCodeInput, "c")) {
+
+		fscanf(gstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
 		while(!feof(gstText)) {
-			fscanf(gstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
 			if (strcmp(itemCodeInput, itemCode) == 0) {
 				itemFound = YES;
 				isGST = YES;
 				break;
 			}
-			fscanf(ngstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
+			fscanf(gstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
+		}
+
+		fscanf(ngstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
+		while(!feof(ngstText) && !itemFound) {
 			if (strcmp(itemCodeInput, itemCode) == 0) {
 				itemFound = YES;
 				isGST = NO;
 				break;
 			}
+			fscanf(ngstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
 		}
 
 		if (itemFound) {
@@ -242,11 +206,9 @@ void purchase(void)
 
 	// Receipt
 	if (strcmp(itemCodeInput, "-1") && subtotal > 0) {
-		flush = getchar();
 		printf("Print receipt? (y/n): ");
 		for(;;) {
 			receiptPrompt = getchar();
-			flush = getchar();
 			if (receiptPrompt == 'y') {
 
 				transactionsText = fopen("transactions.txt", "r");
@@ -269,7 +231,7 @@ void purchase(void)
 						total += subtotal;
 						printf("Subtotal: %.2lf\n", subtotal);
 					}
-					printf("");
+					puts("");
 				}
 				printf("Total Sales incl GST: %.2lf\n", total);
 				roundedTotal = round(total * 20.0) / 20.0; // rounds prices to 0.05
@@ -289,8 +251,66 @@ void purchase(void)
 	else
 		puts("Transaction canceled");
 
+	puts("");
+
 	fclose(gstText);
 	fclose(ngstText);
 
 	return;
+}
+
+void showInventory(void)
+{  
+	char itemCode[6];
+	char itemName[20];
+	double itemPrice;
+	int quantity;
+
+    puts("GST included Items");
+    if ((gstText = fopen("gst.txt", "r")) == NULL ) {
+		puts("The file 'gst.txt' could not be opened");
+		puts("Please contact your system administrator.");
+	}
+	else {
+		printf("%s \t %s \t %s \t %s \n", "Item Code", "Item Name", "Item Price", "Quantity");
+
+		fscanf(gstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &itemPrice, &quantity);
+		while (!feof(gstText)){
+			printf("%s \t %s \t %.2lf \t %d \n", itemCode, itemName, itemPrice, quantity);
+			fscanf(gstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &itemPrice, &quantity);
+		}
+
+		fclose(gstText);
+	}
+
+	puts("Non-GST included Items");
+    if ((ngstText = fopen("ngst.txt", "r")) ==NULL ) {
+		puts("The file 'ngst.txt' could not be opened");
+		puts("Please contact your system administrator.");
+	}
+	else {
+		printf("%s \t %s \t %s \t %s\n", "Item Code", "Item Name", "Item Price", "Quantity");
+
+		fscanf(ngstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &itemPrice, &quantity);
+		while (!feof(ngstText)){
+	    	printf("%s \t %s \t %.2lf \t %d \n", itemCode, itemName, itemPrice, quantity);
+	    	fscanf(ngstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &itemPrice, &quantity);
+		}
+
+		fclose(ngstText);
+	}
+	return;
+}
+
+void showTransactions(void)
+{
+	puts("------------------------------------");
+	puts("Transaction Details");
+	puts("------------------------------------");
+	puts("");
+	printf("Today's transactions:    %d", gstTransactions + ngstTransactions);
+	printf("Sales with GST:          %.2lf", gstSales);
+	printf("Sales without GST:       %.2lf", ngstSales);
+	printf("Total sales:             %.2lf", gstSales + ngstSales);
+	printf("GST collected:           %.2lf", gstSales * 0.06);
 }
