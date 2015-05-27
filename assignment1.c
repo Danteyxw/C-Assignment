@@ -52,32 +52,39 @@ int main(void)
 	// Options
 	while (loopMenu) {
 		printf("Select an option: ");
-		scanf("%s", menuInput);
+		fgets(menuInput, MAXCHAR-1, stdin);
+
 		convertedMenuInput = atoi(menuInput);
 
 		switch (convertedMenuInput) {
 			case 1:
 				purchase();
+				puts("");
 				break;
 				
 			case 2:
 				puts("This option allows user to edit items.");
+				puts("");
 				break;
 				
 			case 3:
 				puts("This option allows user to update items.");
+				puts("");
 				break;
 				
 			case 4:
 				puts("This option allows user to delete items.");
+				puts("");
 				break;
 				
 			case 5:
                 showInventory();
+                puts("");
 				break;
 				
 			case 6:
 				showTransactions();
+				puts("");
 				break;
 				
 			case 7:
@@ -100,7 +107,7 @@ void purchase(void)
 	char itemCodeInput[CODELENGTH];
 	char itemCode[CODELENGTH];
 	char itemName[MAXCHAR];
-	char receiptPrompt;
+	char receiptPrompt[MAXCHAR];
 	int quantityInput;
 	int quantity;
 	int itemFound;
@@ -139,6 +146,7 @@ void purchase(void)
 
 	printf("Enter the item code: ");
 	scanf("%s", itemCodeInput);
+	//fgets(itemCodeInput, CODELENGTH-1, stdin);
 	while(strcmp(itemCodeInput, "-1") && strcmp(itemCodeInput, "c")) {
 
 		fscanf(gstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
@@ -200,6 +208,7 @@ void purchase(void)
 		itemFound = NO;
 		printf("Enter the item code: ");
 		scanf("%s", itemCodeInput);
+		//fgets(itemCodeInput, CODELENGTH-1, stdin);
 	}
 
 	fclose(transactionsText);
@@ -208,8 +217,8 @@ void purchase(void)
 	if (strcmp(itemCodeInput, "-1") && subtotal > 0) {
 		printf("Print receipt? (y/n): ");
 		for(;;) {
-			receiptPrompt = getchar();
-			if (receiptPrompt == 'y') {
+			fgets(receiptPrompt, MAXCHAR-1, stdin);
+			if (strcmp(receiptPrompt, "y") == 0) {
 
 				transactionsText = fopen("transactions.txt", "r");
 
@@ -240,7 +249,7 @@ void purchase(void)
 				fclose(transactionsText);
 				break;
 			}
-			else if (receiptPrompt == 'n') {
+			else if (strcmp(receiptPrompt, "n") == 0) {
 				puts("Transaction concluded");
 				break;
 			}
@@ -250,8 +259,6 @@ void purchase(void)
 	}
 	else
 		puts("Transaction canceled");
-
-	puts("");
 
 	fclose(gstText);
 	fclose(ngstText);
@@ -308,9 +315,9 @@ void showTransactions(void)
 	puts("Transaction Details");
 	puts("------------------------------------");
 	puts("");
-	printf("Today's transactions:    %d", gstTransactions + ngstTransactions);
-	printf("Sales with GST:          %.2lf", gstSales);
-	printf("Sales without GST:       %.2lf", ngstSales);
-	printf("Total sales:             %.2lf", gstSales + ngstSales);
-	printf("GST collected:           %.2lf", gstSales * 0.06);
+	printf("Today's transactions:    %d\n", gstTransactions + ngstTransactions);
+	printf("Sales with GST:          %.2lf\n", gstSales);
+	printf("Sales without GST:       %.2lf\n", ngstSales);
+	printf("Total sales:             %.2lf\n", gstSales + ngstSales);
+	printf("GST collected:           %.2lf\n", gstSales * 0.06);
 }
