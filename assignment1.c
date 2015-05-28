@@ -146,7 +146,6 @@ void purchase(void)
 
 	printf("Enter the item code: ");
 	scanf("%s", itemCodeInput);
-	//fgets(itemCodeInput, CODELENGTH-1, stdin);
 	while(strcmp(itemCodeInput, "-1") && strcmp(itemCodeInput, "c")) {
 
 		fscanf(gstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
@@ -208,7 +207,6 @@ void purchase(void)
 		itemFound = NO;
 		printf("Enter the item code: ");
 		scanf("%s", itemCodeInput);
-		//fgets(itemCodeInput, CODELENGTH-1, stdin);
 	}
 
 	fclose(transactionsText);
@@ -218,16 +216,16 @@ void purchase(void)
 		printf("Print receipt? (y/n): ");
 		for(;;) {
 			fgets(receiptPrompt, MAXCHAR-1, stdin);
-			if (strcmp(receiptPrompt, "y") == 0) {
+			if (strcmp(receiptPrompt, "y\n") == 0) {
 
 				transactionsText = fopen("transactions.txt", "r");
 
 				puts("======== Receipt ========");
 				puts("Code       Name                     Price      Quantity");
 				puts("");
-				while(!feof(transactionsText)) {
-					fscanf(transactionsText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
-					
+
+				fscanf(transactionsText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
+				while(!feof(transactionsText)) {	
 					subtotal = price * quantityInput;
 					gstAmount = subtotal * 0.06;
 
@@ -241,6 +239,7 @@ void purchase(void)
 						printf("Subtotal: %.2lf\n", subtotal);
 					}
 					puts("");
+					fscanf(transactionsText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
 				}
 				printf("Total Sales incl GST: %.2lf\n", total);
 				roundedTotal = round(total * 20.0) / 20.0; // rounds prices to 0.05
@@ -249,7 +248,7 @@ void purchase(void)
 				fclose(transactionsText);
 				break;
 			}
-			else if (strcmp(receiptPrompt, "n") == 0) {
+			else if (strcmp(receiptPrompt, "n\n") == 0) {
 				puts("Transaction concluded");
 				break;
 			}
