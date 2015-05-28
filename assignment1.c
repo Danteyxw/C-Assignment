@@ -78,7 +78,6 @@ int main(void)
 				break;
 				
 			case 6:
-				puts("stub here");
 				break;
 				
 			case 7:
@@ -96,46 +95,7 @@ int main(void)
 	return 0;
 }
 
-void showInventory (void)
-{  
-	char itemCode[6];
-	char itemName[20];
-	double itemPrice;
-	int quantity;
 
-    puts("GST included Items");
-    if ((gstText = fopen("gst.txt", "r")) == NULL ) {
-		puts("The file 'gst.txt' could not be opened");
-		puts("Please contact your system administrator.");
-	}
-	else {
-		printf("%s \t %s \t %s \t %s \n", "Item Code", "Item Name", "Item Price", "Quantity");
-
-		while (!feof(gstText)){
-			fscanf(gstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &itemPrice, &quantity);
-			printf("%s \t %s \t %.2lf \t %d \n", itemCode, itemName, itemPrice, quantity);
-		}
-
-		fclose(gstText);
-	}
-
-	puts("Non-GST included Items");
-    if ((ngstText = fopen("ngst.txt", "r")) ==NULL ) {
-		puts("The file 'ngst.txt' could not be opened");
-		puts("Please contact your system administrator.");
-	}
-	else {
-		printf("%s \t %s \t %s \t %s\n", "Item Code", "Item Name", "Item Price", "Quantity");
-
-		while (!feof(ngstText)){
-			fscanf(ngstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &itemPrice, &quantity);
-	    	printf("%s \t %s \t %.2lf \t %d \n", itemCode, itemName, itemPrice, quantity);
-		}
-
-		fclose(ngstText);
-	}
-
-}
 
 void purchase(void)
 {
@@ -182,20 +142,28 @@ void purchase(void)
 	printf("Enter the item code: ");
 	scanf("%s", itemCodeInput);
 	while(strcmp(itemCodeInput, "-1") && strcmp(itemCodeInput, "c")) {
+
+		fscanf(gstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
 		while(!feof(gstText)) {
-			fscanf(gstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
 			if (strcmp(itemCodeInput, itemCode) == 0) {
 				itemFound = YES;
 				isGST = YES;
 				break;
 			}
-			fscanf(ngstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
-			if (strcmp(itemCodeInput, itemCode) == 0) {
-				itemFound = YES;
-				isGST = NO;
-				break;
-			}
+			fscanf(gstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
 		}
+
+		if (!itemFound) {
+			fscanf(ngstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
+			while(!feof(ngstText)) {
+				if (strcmp(itemCodeInput, itemCode) == 0) {
+					itemFound = YES;
+					isGST = NO;
+					break;
+				}
+				fscanf(ngstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
+			}
+		}		
 
 		if (itemFound) {
 			puts("");
@@ -269,7 +237,7 @@ void purchase(void)
 						total += subtotal;
 						printf("Subtotal: %.2lf\n", subtotal);
 					}
-					printf("");
+					puts("");
 				}
 				printf("Total Sales incl GST: %.2lf\n", total);
 				roundedTotal = round(total * 20.0) / 20.0; // rounds prices to 0.05
@@ -291,6 +259,48 @@ void purchase(void)
 
 	fclose(gstText);
 	fclose(ngstText);
+
+	return;
+}
+
+void showInventory (void)
+{  
+	char itemCode[6];
+	char itemName[20];
+	double itemPrice;
+	int quantity;
+
+    puts("GST included Items");
+    if ((gstText = fopen("gst.txt", "r")) == NULL ) {
+		puts("The file 'gst.txt' could not be opened");
+		puts("Please contact your system administrator.");
+	}
+	else {
+		printf("%s \t %s \t %s \t %s \n", "Item Code", "Item Name", "Item Price", "Quantity");
+
+		while (!feof(gstText)){
+			fscanf(gstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &itemPrice, &quantity);
+			printf("%s \t %s \t %.2lf \t %d \n", itemCode, itemName, itemPrice, quantity);
+		}
+
+		fclose(gstText);
+	}
+
+	puts("Non-GST included Items");
+    if ((ngstText = fopen("ngst.txt", "r")) ==NULL ) {
+		puts("The file 'ngst.txt' could not be opened");
+		puts("Please contact your system administrator.");
+	}
+	else {
+		printf("%s \t %s \t %s \t %s\n", "Item Code", "Item Name", "Item Price", "Quantity");
+
+		while (!feof(ngstText)){
+			fscanf(ngstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &itemPrice, &quantity);
+	    	printf("%s \t %s \t %.2lf \t %d \n", itemCode, itemName, itemPrice, quantity);
+		}
+
+		fclose(ngstText);
+	}
 
 	return;
 }
