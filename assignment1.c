@@ -174,11 +174,11 @@ void purchase(void)
 			puts("");
 			puts("Quantities less than 1 will cancel the selected item");
 			printf("Enter the quantity: ");
-			scanf("%d", &quantityInput);
-			if (quantityInput > 0) {
+			if ((scanf("%d", &quantityInput)) == 1 && quantityInput > 0) {
 
 				subtotal = price * quantityInput;
 				gstAmount = subtotal * 0.06;
+
 				// Write to file
 				fprintf(transactionsText, "%s;%s;%.2lf;%d\n", itemCode, itemName, price, quantityInput);
 
