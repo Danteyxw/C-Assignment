@@ -143,26 +143,24 @@ void purchase(void)
 	scanf("%s", itemCodeInput);
 	while(strcmp(itemCodeInput, "-1") && strcmp(itemCodeInput, "c")) {
 
-		fscanf(gstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
-		while(!feof(gstText)) {
+		do {
+			fscanf(gstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
 			if (strcmp(itemCodeInput, itemCode) == 0) {
 				itemFound = YES;
 				isGST = YES;
 				break;
 			}
-			fscanf(gstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
-		}
+		} while(!feof(gstText));
 
 		if (!itemFound) {
-			fscanf(ngstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
-			while(!feof(ngstText)) {
+			do {
+				fscanf(ngstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
 				if (strcmp(itemCodeInput, itemCode) == 0) {
 					itemFound = YES;
 					isGST = NO;
 					break;
 				}
-				fscanf(ngstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
-			}
+			} while(!feof(ngstText));
 		}		
 
 		if (itemFound) {
