@@ -20,6 +20,7 @@ FILE *gstText;
 FILE *ngstText;
 FILE *transactionsText;
 
+int flush;
 int gstTransactions;
 int ngstTransactions;
 double gstSales;	// gst not included
@@ -59,6 +60,7 @@ int main(void)
 		switch (convertedMenuInput) {
 			case 1:
 				purchase();
+				flush = getchar();
 				puts("");
 				break;
 				
@@ -113,6 +115,7 @@ void purchase(void)
 	int itemFound;
 	int transactions = 0;
 	int isGST;
+	int c;
 	double price;
 	double subtotal;
 	double gstAmount;
@@ -147,9 +150,6 @@ void purchase(void)
 	printf("Enter the item code: ");
 	scanf("%s", itemCodeInput);
 	while(strcmp(itemCodeInput, "-1") && strcmp(itemCodeInput, "c")) {
-
-		fscanf(gstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
-
 		do {
 			fscanf(gstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
 			if (strcmp(itemCodeInput, itemCode) == 0) {
@@ -216,9 +216,9 @@ void purchase(void)
 	// Receipt
 	if (strcmp(itemCodeInput, "-1") && subtotal > 0) {
 		printf("Print receipt? (y/n): ");
-		for(;;) {
-			fgets(receiptPrompt, MAXCHAR-1, stdin);
-			if (strcmp(receiptPrompt, "y\n") == 0) {
+		flush = getchar();
+		while (c = getchar()) {
+			if (c == 'y') {
 
 				transactionsText = fopen("transactions.txt", "r");
 
@@ -251,7 +251,7 @@ void purchase(void)
 				fclose(transactionsText);
 				break;
 			}
-			else if (strcmp(receiptPrompt, "n\n") == 0) {
+			else if (c == 'n') {
 				puts("Transaction concluded");
 				break;
 			}
