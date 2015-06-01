@@ -149,24 +149,26 @@ void purchase(void)
 	while(strcmp(itemCodeInput, "-1") && strcmp(itemCodeInput, "c")) {
 
 		fscanf(gstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
-		while(!feof(gstText)) {
+
+		do {
+			fscanf(gstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
 			if (strcmp(itemCodeInput, itemCode) == 0) {
 				itemFound = YES;
 				isGST = YES;
 				break;
 			}
-			fscanf(gstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
-		}
+		} while(!feof(gstText));
 
-		fscanf(ngstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
-		while(!feof(ngstText) && !itemFound) {
-			if (strcmp(itemCodeInput, itemCode) == 0) {
-				itemFound = YES;
-				isGST = NO;
-				break;
-			}
-			fscanf(ngstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
-		}
+		if (!itemFound) {
+			do {
+				fscanf(ngstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
+				if (strcmp(itemCodeInput, itemCode) == 0) {
+					itemFound = YES;
+					isGST = NO;
+					break;
+				}
+			} while(!feof(ngstText));
+		}		
 
 		if (itemFound) {
 			puts("");
@@ -239,6 +241,7 @@ void purchase(void)
 						printf("Subtotal: %.2lf\n", subtotal);
 					}
 					puts("");
+
 					fscanf(transactionsText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
 				}
 				printf("Total Sales incl GST: %.2lf\n", total);
@@ -299,8 +302,8 @@ void showInventory(void)
 
 		fscanf(ngstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &itemPrice, &quantity);
 		while (!feof(ngstText)){
+			fscanf(ngstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &itemPrice, &quantity);
 	    	printf("%s \t %s \t %.2lf \t %d \n", itemCode, itemName, itemPrice, quantity);
-	    	fscanf(ngstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &itemPrice, &quantity);
 		}
 
 		fclose(ngstText);
@@ -319,4 +322,6 @@ void showTransactions(void)
 	printf("Sales without GST:       %.2lf\n", ngstSales);
 	printf("Total sales:             %.2lf\n", gstSales + ngstSales);
 	printf("GST collected:           %.2lf\n", gstSales * 0.06);
+
+	return;
 }
