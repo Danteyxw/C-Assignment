@@ -119,7 +119,7 @@ void purchase(void)
 	double price;
 	double subtotal;
 	double gstAmount;
-	double total;
+	double total = 0;
 	double roundedTotal;
 	
 	if ((gstText = fopen("gst.txt", "r")) == NULL ) {
@@ -190,11 +190,15 @@ void purchase(void)
 					printf("Subtotal: %.2lf (%.2lf + %.2lf GST)\n", subtotal + gstAmount, subtotal, gstAmount);
 					gstTransactions += quantityInput;
 					gstSales += subtotal;
+					total += subtotal + gstAmount; // R*R
+					printf("Total: %.2lf\n", total);
 				}
 				else {
 					printf("Subtotal: %.2lf\n", subtotal);
 					ngstTransactions += quantityInput;
 					ngstSales += subtotal;
+					total += subtotal;
+					printf("Total: %.2lf\n", total);
 				}
 				puts("");
 			}
@@ -228,16 +232,14 @@ void purchase(void)
 
 				fscanf(transactionsText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
 				while(!feof(transactionsText)) {	
-					subtotal = price * quantityInput;
+					subtotal = price * quantity;
 					gstAmount = subtotal * 0.06;
 
-					printf("%-10s %-24s %-10.2lf %-10d\n", itemCode, itemName, price, quantityInput);
+					printf("%-10s %-24s %-10.2lf %-10d\n", itemCode, itemName, price, quantity);
 					if (itemCode[1] == 'G') {
-						total += (subtotal + gstAmount);
 						printf("Subtotal: %.2lf (%.2lf + %.2lf GST)\n", subtotal + gstAmount, subtotal, gstAmount);
 					}
 					else {
-						total += subtotal;
 						printf("Subtotal: %.2lf\n", subtotal);
 					}
 					puts("");
