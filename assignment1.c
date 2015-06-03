@@ -30,6 +30,8 @@ void purchase(void);
 void showInventory(void);
 void showTransactions(void);
 
+void printMenu(void);
+
 int main(void)
 {
 	int convertedMenuInput;
@@ -37,21 +39,10 @@ int main(void)
 	int badInput = NO;
 	char menuInput[MAXCHAR];
 
-	// Menu
-		puts("------------------------------------");
-		puts("Grocery Retail");
-		puts("------------------------------------");
-		puts("1. Purchase items");
-		puts("2. Edit items");
-		puts("3. Update items");
-		puts("4. Delete items");
-		puts("5. Show inventory");
-		puts("6. Show daily transaction");
-		puts("7. Exit");
-		puts("");
-
 	// Options
 	while (loopMenu) {
+		printMenu();
+
 		printf("Select an option: ");
 		fgets(menuInput, MAXCHAR-1, stdin);
 
@@ -59,42 +50,50 @@ int main(void)
 
 		switch (convertedMenuInput) {
 			case 1:
+				system("clear");
 				purchase();
 				flush = getchar();
 				puts("");
 				break;
 				
 			case 2:
+				system("clear");
 				puts("This option allows user to edit items.");
 				puts("");
 				break;
 				
 			case 3:
+				system("clear");
 				puts("This option allows user to update items.");
 				puts("");
 				break;
 				
 			case 4:
+				system("clear");
 				puts("This option allows user to delete items.");
 				puts("");
 				break;
 				
 			case 5:
+				system("clear");
                 showInventory();
                 puts("");
 				break;
 				
 			case 6:
+				system("clear");
 				showTransactions();
 				puts("");
 				break;
 				
 			case 7:
+				system("clear");
 				puts("Program exiting.");
 				loopMenu = NO;
 				break;
 				
 			default:
+				system("clear");
 				puts("Invalid input. Please enter your selection again.");
 				badInput = YES;
 				break;
@@ -275,35 +274,36 @@ void showInventory(void)
 	double itemPrice;
 	int quantity;
 
-    puts("GST included Items");
+    puts("| GST included Items |");
     if ((gstText = fopen("gst.txt", "r")) == NULL ) {
 		puts("The file 'gst.txt' could not be opened");
 		puts("Please contact your system administrator.");
 	}
 	else {
-		printf("%s \t %s \t %s \t %s \n", "Item Code", "Item Name", "Item Price", "Quantity");
+		puts("Code       Name                     Price      Quantity\n");
 
 		fscanf(gstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &itemPrice, &quantity);
 		while (!feof(gstText)){
-			printf("%s \t %s \t %.2lf \t %d \n", itemCode, itemName, itemPrice, quantity);
+			printf("%-10s %-24s %-10.2lf %-10d\n", itemCode, itemName, itemPrice, quantity);
 			fscanf(gstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &itemPrice, &quantity);
 		}
 
 		fclose(gstText);
 	}
 
-	puts("Non-GST included Items");
+	puts("");
+	puts("| Non-GST included Items |");
     if ((ngstText = fopen("ngst.txt", "r")) ==NULL ) {
 		puts("The file 'ngst.txt' could not be opened");
 		puts("Please contact your system administrator.");
 	}
 	else {
-		printf("%s \t %s \t %s \t %s\n", "Item Code", "Item Name", "Item Price", "Quantity");
+		puts("Code       Name                     Price      Quantity\n");
 
 		fscanf(ngstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &itemPrice, &quantity);
 		while (!feof(ngstText)){
 			fscanf(ngstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &itemPrice, &quantity);
-	    	printf("%s \t %s \t %.2lf \t %d \n", itemCode, itemName, itemPrice, quantity);
+	    	printf("%-10s %-24s %-10.2lf %-10d\n", itemCode, itemName, itemPrice, quantity);
 		}
 
 		fclose(ngstText);
@@ -322,6 +322,26 @@ void showTransactions(void)
 	printf("Sales without GST:       %.2lf\n", ngstSales);
 	printf("Total sales:             %.2lf\n", gstSales + ngstSales);
 	printf("GST collected:           %.2lf\n", gstSales * 0.06);
+
+	return;
+}
+
+void printMenu(void)
+{
+	puts("");
+	puts("------------------------------------");
+	puts("Grocery Retail");
+	puts("------------------------------------");
+	puts("1. Purchase items");
+	puts("2. Edit items");
+	puts("3. Update items");
+	puts("4. Delete items");
+	puts("5. Show inventory");
+	puts("6. Show daily transaction");
+	puts("7. Exit");
+	puts("");
+	puts("------------------------------------");
+	puts("");
 
 	return;
 }
