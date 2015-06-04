@@ -31,6 +31,8 @@ void showInventory(void);
 void showTransactions(void);
 
 void printMenu(void);
+void cont(void);
+void printReceipt(char yes, char no, char itemCode[CODELENGTH], char itemName[MAXCHAR], double price, int quantity);
 
 int main(void)
 {
@@ -53,7 +55,9 @@ int main(void)
 				system("clear");
 				purchase();
 				flush = getchar();
+				cont();
 				puts("");
+				system("clear");
 				break;
 				
 			case 2:
@@ -98,7 +102,7 @@ int main(void)
 				badInput = YES;
 				break;
 		}
-	}
+	} 
 			
 	return 0;
 }
@@ -119,7 +123,6 @@ void purchase(void)
 	double subtotal;
 	double gstAmount;
 	double total;
-	double roundedTotal;
 	
 	if ((gstText = fopen("gst.txt", "r")) == NULL ) {
 		puts("The file 'gst.txt' could not be opened");
@@ -149,7 +152,7 @@ void purchase(void)
 	printf("Enter the item code: ");
 	scanf("%s", itemCodeInput);
 	while(strcmp(itemCodeInput, "-1") && strcmp(itemCodeInput, "c")) {
-		do {
+		do { // R*R
 			fscanf(gstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
 			if (strcmp(itemCodeInput, itemCode) == 0) {
 				itemFound = YES;
@@ -213,50 +216,12 @@ void purchase(void)
 	fclose(transactionsText);
 
 	// Receipt
+	char yesReceipt = 'y';
+	char noReceipt =  'n';
 	if (strcmp(itemCodeInput, "-1") && subtotal > 0) {
-		printf("Print receipt? (y/n): ");
+		printf("Print receipt? (%c/%c): ", yesReceipt, noReceipt);
 		flush = getchar();
-		while (c = getchar()) {
-			if (c == 'y') {
-
-				transactionsText = fopen("transactions.txt", "r");
-
-				puts("======== Receipt ========");
-				puts("Code       Name                     Price      Quantity");
-				puts("");
-
-				fscanf(transactionsText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
-				while(!feof(transactionsText)) {	
-					subtotal = price * quantityInput;
-					gstAmount = subtotal * 0.06;
-
-					printf("%-10s %-24s %-10.2lf %-10d\n", itemCode, itemName, price, quantityInput);
-					if (itemCode[1] == 'G') {
-						total += (subtotal + gstAmount);
-						printf("Subtotal: %.2lf (%.2lf + %.2lf GST)\n", subtotal + gstAmount, subtotal, gstAmount);
-					}
-					else {
-						total += subtotal;
-						printf("Subtotal: %.2lf\n", subtotal);
-					}
-					puts("");
-
-					fscanf(transactionsText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
-				}
-				printf("Total Sales incl GST: %.2lf\n", total);
-				roundedTotal = round(total * 20.0) / 20.0; // rounds prices to 0.05
-				printf("Rounding adjusment: %.2lf\n", roundedTotal - total);
-				printf("Total after adj incl GST: %.2lf\n", roundedTotal);
-				fclose(transactionsText);
-				break;
-			}
-			else if (c == 'n') {
-				puts("Transaction concluded");
-				break;
-			}
-			else
-				printf("Invalid input, please enter y or n: ");
-		}
+		printReceipt(yesReceipt, noReceipt, itemCode, itemName, price, quantity);
 	}
 	else
 		puts("Transaction canceled");
@@ -271,7 +236,7 @@ void showInventory(void)
 {  
 	char itemCode[6];
 	char itemName[20];
-	double itemPrice;
+	double price;
 	int quantity;
 
     puts("| GST included Items |");
@@ -282,10 +247,10 @@ void showInventory(void)
 	else {
 		puts("Code       Name                     Price      Quantity\n");
 
-		fscanf(gstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &itemPrice, &quantity);
+		fscanf(gstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
 		while (!feof(gstText)){
-			printf("%-10s %-24s %-10.2lf %-10d\n", itemCode, itemName, itemPrice, quantity);
-			fscanf(gstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &itemPrice, &quantity);
+			printf("%-10s %-24s %-10.2lf %-10d\n", itemCode, itemName, price, quantity);
+			fscanf(gstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
 		}
 
 		fclose(gstText);
@@ -300,10 +265,10 @@ void showInventory(void)
 	else {
 		puts("Code       Name                     Price      Quantity\n");
 
-		fscanf(ngstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &itemPrice, &quantity);
+		fscanf(ngstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
 		while (!feof(ngstText)){
-			fscanf(ngstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &itemPrice, &quantity);
-	    	printf("%-10s %-24s %-10.2lf %-10d\n", itemCode, itemName, itemPrice, quantity);
+			printf("%-10s %-24s %-10.2lf %-10d\n", itemCode, itemName, price, quantity);
+			fscanf(ngstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
 		}
 
 		fclose(ngstText);
@@ -344,4 +309,70 @@ void printMenu(void)
 	puts("");
 
 	return;
+}
+
+void cont(void)
+{
+	int c;
+
+	puts("");
+	puts("Press enter to continue");
+	c = getchar();
+
+	return;
+}
+
+void printReceipt(char yes, char no, char itemCode[CODELENGTH], char itemName[MAXCHAR], double price, int quantity)
+{
+	int c;
+	double gstAmount;
+	double subtotal;
+	double total;
+	double roundedTotal;
+
+	system("clear");
+
+	while (c = getchar()) {
+		if (c == yes) {
+
+			transactionsText = fopen("transactions.txt", "r");
+
+			system("clear");
+
+			puts("======== Receipt ========");
+			puts("Code       Name                     Price      Quantity");
+			puts("");
+
+			fscanf(transactionsText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
+			while(!feof(transactionsText)) {	
+				subtotal = price * quantity;
+				gstAmount = subtotal * 0.06;
+
+				printf("%-10s %-24s %-10.2lf %-10d\n", itemCode, itemName, price, quantity);
+				if (itemCode[1] == 'G') {
+					total += (subtotal + gstAmount);
+					printf("Subtotal: %.2lf (%.2lf + %.2lf GST)\n", subtotal + gstAmount, subtotal, gstAmount);
+				}
+				else {
+					total += subtotal;
+					printf("Subtotal: %.2lf\n", subtotal);
+				}
+				puts("");
+
+				fscanf(transactionsText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
+			}
+			printf("Total Sales incl GST: %.2lf\n", total);
+			roundedTotal = round(total * 20.0) / 20.0; // rounds prices to 0.05
+			printf("Rounding adjusment: %.2lf\n", roundedTotal - total);
+			printf("Total after adj incl GST: %.2lf\n", roundedTotal);
+			fclose(transactionsText);
+			break;
+		}
+		else if (c == no) {
+			puts("Transaction concluded");
+			break;
+		}
+		else
+			printf("Invalid input, please enter y or n: ");
+	}
 }
