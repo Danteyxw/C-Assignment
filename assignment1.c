@@ -345,9 +345,9 @@ void showTransactions(void)
 	puts("------------------------------------");
 	puts("");
 	printf("Today's transactions:    %d\n", gstTransactions + ngstTransactions);
-	printf("Sales with GST:          %.2lf\n", gstSales + gstSales * 0.06);
+	printf("Sales with GST:          %.2lf\n", gstSales * 1.06);
 	printf("Sales without GST:       %.2lf\n", ngstSales);
-	printf("Total sales:             %.2lf\n", gstSales + gstSales*0.06 + ngstSales);
+	printf("Total sales:             %.2lf\n", gstSales*1.06 + ngstSales);
 	printf("GST collected:           %.2lf\n", gstSales * 0.06);
 
 	return;
