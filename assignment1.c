@@ -347,7 +347,7 @@ void showTransactions(void)
 	printf("Today's transactions:    %d\n", gstTransactions + ngstTransactions);
 	printf("Sales with GST:          %.2lf\n", gstSales);
 	printf("Sales without GST:       %.2lf\n", ngstSales);
-	printf("Total sales:             %.2lf\n", gstSales + ngstSales);
+	printf("Total sales:             %.2lf (%.2lf + %.2lf GST)\n", gstSales + gstSales*0.06 + ngstSales, gstSales + ngstSales, gstSales*0.06);
 	printf("GST collected:           %.2lf\n", gstSales * 0.06);
 
 	return;
