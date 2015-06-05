@@ -1,3 +1,1 @@
-AG001;July biscuits;5.35;34
-AN001;Asam;1.20;32
-DG002;French Fries;4.30;11
+AG001;July biscuits;5.35;3

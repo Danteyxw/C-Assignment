@@ -164,6 +164,7 @@ void purchase(void)
 			} while(!feof(ngstText));
 		}		
 
+		// Quantity Prompt
 		if (itemFound == YES) {
 			system("clear");
 
@@ -456,6 +457,8 @@ void printReceipt(char yes, char no, char itemCode[CODELENGTH], char itemName[MA
 			break;
 		}
 		else
+			if (c != '\n')
+				flush = getchar();
 			printf("Invalid input, please enter y or n: ");
 	}
 }
