@@ -31,6 +31,8 @@ void showInventory(void);
 void showTransactions(void);
 
 void printMenu(void);
+void printPurchaseMenu(void);
+void printQuantityPrompt(void);
 void cont(void);
 void printReceipt(char yes, char no, char itemCode[CODELENGTH], char itemName[MAXCHAR], double price, int quantity);
 
@@ -41,6 +43,8 @@ int main(void)
 	int badInput = NO;
 	char menuInput[MAXCHAR];
 
+	system("clear");
+
 	// Options
 	while (loopMenu) {
 		printMenu();
@@ -50,57 +54,53 @@ int main(void)
 
 		convertedMenuInput = atoi(menuInput);
 
+		system("clear");
+
 		switch (convertedMenuInput) {
 			case 1:
-				system("clear");
 				purchase();
 				flush = getchar();
 				cont();
-				puts("");
-				system("clear");
 				break;
 				
 			case 2:
-				system("clear");
 				puts("This option allows user to edit items.");
-				puts("");
+				cont();
 				break;
 				
 			case 3:
-				system("clear");
 				puts("This option allows user to update items.");
-				puts("");
+				cont();
 				break;
 				
 			case 4:
-				system("clear");
 				puts("This option allows user to delete items.");
-				puts("");
+				cont();
 				break;
 				
 			case 5:
-				system("clear");
-                showInventory();
-                puts("");
+				showInventory();
+				cont();
 				break;
 				
 			case 6:
-				system("clear");
 				showTransactions();
-				puts("");
+				cont();
 				break;
 				
 			case 7:
-				system("clear");
-				puts("Program exiting.");
 				loopMenu = NO;
 				break;
 				
 			default:
-				system("clear");
-				puts("Invalid input. Please enter your selection again.");
 				badInput = YES;
 				break;
+		}
+		system("clear");
+
+		if (badInput) {
+			puts("Invalid input. Please enter your selection again.");
+			badInput = NO;
 		}
 	} 
 			
@@ -118,7 +118,8 @@ void purchase(void)
 	int itemFound;
 	int transactions = 0;
 	int isGST;
-	int c;
+	int badInput;
+	int cancelItem;
 	double price;
 	double subtotal;
 	double gstAmount;
@@ -134,25 +135,16 @@ void purchase(void)
 		puts("Please contact your system administrator.");
 		return;
 	}
-	else if ((transactionsText = fopen("transactions.txt", "w")) == NULL) {
-		puts("The file 'transactions.txt' could not be opened");
-		puts("Please contact your system administrator.");
-		return;
-	}
+	transactionsText = fopen("transactions.txt", "w");
+	fclose(transactionsText);
 
 	itemFound = NO;
 
-	puts("------------------------------------");
-	puts("Purchase");
-	puts("------------------------------------");
-	puts("Enter -1 to cancel transaction");
-	puts("Enter c to conclude transaction");
-	puts("");
-
+	printPurchaseMenu();
 	printf("Enter the item code: ");
 	scanf("%s", itemCodeInput);
 	while(strcmp(itemCodeInput, "-1") && strcmp(itemCodeInput, "c")) {
-		do { // R*R
+		do {
 			fscanf(gstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
 			if (strcmp(itemCodeInput, itemCode) == 0) {
 				itemFound = YES;
@@ -161,7 +153,7 @@ void purchase(void)
 			}
 		} while(!feof(gstText));
 
-		if (!itemFound) {
+		if (itemFound == NO) {
 			do {
 				fscanf(ngstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
 				if (strcmp(itemCodeInput, itemCode) == 0) {
@@ -172,48 +164,117 @@ void purchase(void)
 			} while(!feof(ngstText));
 		}		
 
-		if (itemFound) {
+		if (itemFound == YES) {
+			system("clear");
+
+			printQuantityPrompt();
+			puts("Code       Name                     Price      Stock");
+			printf("%-10s %-24s %-10.2lf %-10d\n", itemCode, itemName, price, quantity);
 			puts("");
-			puts("Quantities less than 1 will cancel the selected item");
 			printf("Enter the quantity: ");
-			if ((scanf("%d", &quantityInput)) == 1 && quantityInput > 0) {
 
-				subtotal = price * quantityInput;
-				gstAmount = subtotal * 0.06;
+			for(;;) {
 
-				// Write to file
-				fprintf(transactionsText, "%s;%s;%.2lf;%d\n", itemCode, itemName, price, quantityInput);
-
-				puts("");
-				puts("Code       Name                     Price      Quantity\n");
-				printf("%-10s %-24s %-10.2lf %-10d\n", itemCode, itemName, price, quantityInput);
-				puts("");
-				if (isGST) {	// is the item GST taxable?
-					printf("Subtotal: %.2lf (%.2lf + %.2lf GST)\n", subtotal + gstAmount, subtotal, gstAmount);
-					gstTransactions += quantityInput;
-					gstSales += subtotal;
+				if (scanf("%d", &quantityInput) != 1) {
+					system("clear");
+					puts("Invalid input, please enter a number");
 				}
+
+				else if (quantityInput > 0 && quantityInput <= quantity) {
+
+					subtotal = price * quantityInput;
+					gstAmount = subtotal * 0.06;
+
+					// Write to file
+					transactionsText = fopen("transactions.txt", "a");
+					fprintf(transactionsText, "%s;%s;%.2lf;%d\n", itemCode, itemName, price, quantityInput);
+
+					puts("");
+					puts("Code       Name                     Price      Quantity");
+					printf("%-10s %-24s %-10.2lf %-10d\n", itemCode, itemName, price, quantityInput);
+					puts("");
+					if (isGST) {	// is the item GST taxable?
+						printf("Subtotal: %.2lf (%.2lf + %.2lf GST)\n", subtotal + gstAmount, subtotal, gstAmount);
+						gstTransactions += quantityInput;
+						gstSales += subtotal;
+						total += (subtotal + gstAmount);
+					}
+					else {
+						printf("Subtotal: %.2lf\n", subtotal);
+						ngstTransactions += quantityInput;
+						ngstSales += subtotal;
+						total += subtotal;
+					}
+
+					fclose(transactionsText);
+
+					flush = getchar();
+					cont();
+					break;
+				}
+
+				else if (quantityInput > quantity) {
+					system("clear");
+					printf("Amount exceeded stock, please enter a number equal or less than %d\n", quantity);
+				}
+				
 				else {
-					printf("Subtotal: %.2lf\n", subtotal);
-					ngstTransactions += quantityInput;
-					ngstSales += subtotal;
+					cancelItem = YES;
+					break;
 				}
+
+				flush = getchar();
+
+				printQuantityPrompt();
+				puts("Code       Name                     Price      Stock");
+				printf("%-10s %-24s %-10.2lf %-10d\n", itemCode, itemName, price, quantity);
 				puts("");
+				printf("Enter the quantity: ");
 			}
-			else
-				puts("Item canceled");
 		}
 		else
-			puts("Invalid item.");
+			badInput = YES;
 
 		rewind(gstText);
 		rewind(ngstText);
 		itemFound = NO;
+
+		system("clear");
+
+		if (cancelItem == YES) {
+			puts("Item canceled");
+			cancelItem = NO;
+		}
+		else if (badInput == YES) {
+			puts("Invalid item.");
+			badInput = NO;
+		}
+		
+		printPurchaseMenu();
+
+		puts("Cart");
+		puts("=======");
+		puts("Code       Name                     Price      Quantity");
+
+		// Cart
+		transactionsText = fopen("transactions.txt", "r");
+
+		fscanf(transactionsText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
+		while(!feof(transactionsText)) {	
+			subtotal = price * quantity;
+			gstAmount = subtotal * 0.06;
+
+			printf("%-10s %-24s %-10.2lf %-10d\n", itemCode, itemName, price, quantity);
+			fscanf(transactionsText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
+		}
+		fclose(transactionsText); 
+		puts("");
+		printf("Total: %.2lf", total);
+		puts(""); // End of Cart
+
 		printf("Enter the item code: ");
 		scanf("%s", itemCodeInput);
 	}
-
-	fclose(transactionsText);
 
 	// Receipt
 	char yesReceipt = 'y';
@@ -224,7 +285,7 @@ void purchase(void)
 		printReceipt(yesReceipt, noReceipt, itemCode, itemName, price, quantity);
 	}
 	else
-		puts("Transaction canceled");
+		puts("Transaction canceled"); // End of Receipt
 
 	fclose(gstText);
 	fclose(ngstText);
@@ -293,7 +354,6 @@ void showTransactions(void)
 
 void printMenu(void)
 {
-	puts("");
 	puts("------------------------------------");
 	puts("Grocery Retail");
 	puts("------------------------------------");
@@ -311,13 +371,36 @@ void printMenu(void)
 	return;
 }
 
+void printPurchaseMenu(void)
+{
+	puts("------------------------------------");
+	puts("Purchase");
+	puts("------------------------------------");
+	puts("Enter -1 to cancel transaction");
+	puts("Enter c to conclude transaction");
+	puts("");
+
+	return;
+}
+
+void printQuantityPrompt(void)
+{
+	puts("------------------------------------");
+	puts("Purchase");
+	puts("------------------------------------");
+	puts("Quantities less than 1 will cancel the selected item");
+	puts("");
+
+	return;
+}
+
 void cont(void)
 {
 	int c;
 
 	puts("");
 	puts("Press enter to continue");
-	c = getchar();
+	while ((c = getchar()) != '\n');
 
 	return;
 }
