@@ -5,7 +5,6 @@
 void replaceFile(char fileName[25], char itemCodeInput[8]);
 
 int main (void)
-
 {
     FILE *gstText;
     FILE *ngstText;

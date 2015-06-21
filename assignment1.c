@@ -8,6 +8,7 @@
 */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <math.h>
 
@@ -29,12 +30,17 @@ double ngstSales;
 void purchase(void);
 void showInventory(void);
 void showTransactions(void);
+void delete(void);
 
 void printMenu(void);
 void printPurchaseMenu(void);
 void printQuantityPrompt(void);
+void printDeleteMenu(void);
 void cont(void);
+
 void printReceipt(char yes, char no, char itemCode[CODELENGTH], char itemName[MAXCHAR], double price, int quantity);
+void replaceFile(char fileName[25], char itemCodeInput[8]);
+
 
 int main(void)
 {
@@ -74,7 +80,7 @@ int main(void)
 				break;
 				
 			case 4:
-				puts("This option allows user to delete items.");
+				delete();
 				cont();
 				break;
 				
@@ -103,10 +109,9 @@ int main(void)
 			badInput = NO;
 		}
 	} 
-			
-	return 0;
-}
+} // end of main
 
+// Option 1: Purchase
 void purchase(void)
 {
 	char itemCodeInput[CODELENGTH];
@@ -292,8 +297,142 @@ void purchase(void)
 	fclose(ngstText);
 
 	return;
-}
+} // end of Purchase
 
+// Option 4: Delete Items
+void delete(void)
+{
+    char itemCodeInput[8];
+    char itemCode[8];
+    char itemName[25];
+    double price;
+    int quantity;
+    int gst;
+    int itemFound;
+    int badInput;
+    int cancelDelete;
+    int stockNotEmpty;
+ 	int itemDeleted;
+    char ch; //for y/n
+    char flush;
+
+	printDeleteMenu();
+
+	printf("Enter item code to be deleted: ");
+	scanf("%s", itemCodeInput);
+
+	while (strcmp(itemCodeInput, "-1") != 0) { //compare input and code
+        
+        //open the files
+        if ((gstText = fopen("gst.txt", "r")) == NULL ) {
+            puts("The file 'gst.txt' could not be opened");
+            puts("Please contact your system administrator.");
+            return;
+        }
+        else if ((ngstText = fopen("ngst.txt", "r")) == NULL ) {
+            puts("The file 'ngst.txt' could not be opened");
+            puts("Please contact your system administrator.");
+            return;
+        }
+
+        itemFound = NO;
+        gst = NO;
+
+		while(!feof(gstText)) { // check if item code matches in gst.txt
+			fscanf(gstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
+			if (strcmp(itemCodeInput, itemCode) == 0) {
+				itemFound = 1;
+                gst = 1;
+				break;
+			}
+		} 
+
+        if (itemFound == NO) { //open ngst file
+
+            while (!feof(ngstText)) { // check if item code matches in ngst.txt
+                fscanf(ngstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
+                if (strcmp(itemCodeInput, itemCode) == 0) {
+                    itemFound = 1;
+                    break;
+                }
+            }
+        }
+        fclose(gstText);
+        fclose(ngstText);
+
+
+        if (itemFound == YES) { //if matches gst
+
+            printf("Item found.\n\n");
+			puts("Code       Name                     Price      Stock");
+			printf("%-10s %-24s %-10.2lf %-10d\n", itemCode, itemName, price, quantity);
+
+            flush = getchar();
+            printf("Confirm to delete item? (y/n)\n");
+            for(;;) {
+	        	scanf(" %c", &ch);
+
+	            if (ch == 'y'){ //if y to delete
+
+	                if (quantity != 0) { //say no if quantity not zero
+	                    stockNotEmpty = YES;
+	                }
+	                else { //if quantity is zero
+	                    if (gst) {
+	                        replaceFile("gst.txt\0", itemCodeInput);
+	                    }
+	                    else {
+	                        replaceFile("ngst.txt\0", itemCodeInput);
+	                    }
+	                    itemDeleted = YES;
+	                }
+	                break;      
+
+	            } //end if y to delete
+
+	            else if (ch == 'n'){ //if n to delete, cancel transaction
+	                cancelDelete = YES;
+	                break;
+	            }
+	            else {
+	            	puts("invalid input, please enter y or n");
+	            }
+
+            }
+
+        } //end item found
+        else {
+        	badInput = YES;
+        }
+
+        system("clear");
+
+        if (itemDeleted == YES) {
+        	puts("Item deleted.");
+        }
+		else if (cancelDelete == YES) {
+			puts("Deletion canceled.");
+			cancelDelete = NO;
+		}
+		else if (badInput == YES) {
+			puts("Invalid item.");
+			badInput = NO;
+		}
+		else if (stockNotEmpty == YES) {
+			puts("Stock is not zero. Item cannot be deleted.");
+		}
+		
+		puts("");
+		printDeleteMenu();
+
+		printf("\nEnter item code to be deleted: ");
+        scanf("%s", itemCodeInput);
+
+    } // end of while(strcmp)
+} // end of delete
+
+
+// Option 5: Show Inventory
 void showInventory(void)
 {  
 	char itemCode[6];
@@ -336,7 +475,7 @@ void showInventory(void)
 		fclose(ngstText);
 	}
 	return;
-}
+} // end of showInventory
 
 void showTransactions(void)
 {
@@ -390,6 +529,17 @@ void printQuantityPrompt(void)
 	puts("Purchase");
 	puts("------------------------------------");
 	puts("Quantities less than 1 will cancel the selected item");
+	puts("");
+
+	return;
+}
+
+void printDeleteMenu(void)
+{
+	puts("------------------------------------");
+	puts("Delete Items");
+	puts("------------------------------------");
+	puts("Enter -1 to exit");
 	puts("");
 
 	return;
@@ -461,4 +611,34 @@ void printReceipt(char yes, char no, char itemCode[CODELENGTH], char itemName[MA
 				flush = getchar();
 			printf("Invalid input, please enter y or n: ");
 	}
-}
+} // end of printReceipt
+
+void replaceFile(char fileName[25], char itemCodeInput[8]) {
+    FILE *temp;
+    FILE *file;
+    char itemCode[8];
+    char itemName[25];
+    double price;
+    int quantity;
+
+    if ((file = fopen(fileName, "r")) != NULL) {
+        temp = fopen("temp.txt", "w"); //open new file to write
+
+        while (!feof(file)){ //write in new file
+            fscanf(file, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
+            if (strcmp(itemCodeInput, itemCode) != 0) { //avoid the deleted item
+                fprintf(temp, "%s;%s;%.2lf;%d\n", itemCode, itemName, price, quantity);
+            }
+        }
+
+        fclose(temp);
+        fclose(file);
+        remove(fileName);
+        rename("temp.txt", fileName);
+    } 
+    else {
+        puts("The file could no be found");
+    }
+    
+    return;
+} // end of replaceFile
