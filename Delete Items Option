@@ -1,0 +1,158 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+int main (void)
+
+{
+    FILE *gstText;
+    FILE *ngstText;
+    FILE *tempGst;
+    FILE *tempNgst;
+    char itemCodeInput[8];
+    char itemCode[8];
+    char itemName[25];
+    double price;
+    int quantity;
+    int y = 1;
+    int n = 0;
+    int itemFound;
+    char ch; //for y/n
+
+//open the files
+    if ((gstText = fopen("gst.txt", "r")) == NULL ) {
+		puts("The file 'gst.txt' could not be opened");
+		puts("Please contact your system administrator.");
+		return;
+	}
+	else if ((ngstText = fopen("ngst.txt", "r")) == NULL ) {
+		puts("The file 'ngst.txt' could not be opened");
+		puts("Please contact your system administrator.");
+		return;
+	}
+
+	puts("------------------------------------");
+	puts("Delete Items");
+	puts("------------------------------------");
+	puts("Enter -1 to cancel transaction");
+	puts("");
+
+	printf("Enter item code to be deleted: ");
+	scanf("%s", itemCodeInput);
+
+	while (strcmp(itemCodeInput, "-1")!= 0){ //compare input and code
+
+        gstText = fopen("gst.txt", "r"); //open gst file
+
+		while(!feof(gstText)) { // check if item code matches in gst.txt
+			fscanf(gstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
+			if (strcmp(itemCodeInput, itemCode) == 0) {
+				itemFound = 1;
+				break;
+			}
+		}
+
+        if (itemFound = 1){ //if matches gst
+
+            printf("Item found.\n\n");
+			puts("Code       Name                     Price      Stock");
+			printf("%-10s %-24s %-10.2lf %-10d\n", itemCode, itemName, price, quantity);
+
+            printf("Confirm to delete item? (y/n)\n");
+            ch = getchar();
+            scanf("%c", ch);
+
+            if (ch == y){ //if y to delete
+
+                if (quantity != 0){ //say no if quantity not zero
+                    printf("Stock is not zero. Item cannot be deleted.\n");
+                }
+                else if (quantity == 0){ //if quantity is zero
+                    tempGst = fopen("tempGst.txt", "w"); //open new file to write
+
+                    while (!feof(gstText)){ //write in new file
+                            if ((strcmp(itemCodeInput, itemCode) != 0) && (quantity != 0)){ //avoid the deleted item
+                            fscanf(gstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
+                            fprintf(tempGst, "%s ; %s ; %.2lf ; %d\n", itemCode, itemName, price, quantity);
+                            }
+                        }
+
+                        } //end if quantity is zero
+
+                        fclose(gstText);
+                        fclose(tempGst);
+                        remove("gst.txt");
+                        rename("tempGst.txt", "gst.txt");
+
+                        printf("Item deleted\n");
+
+                } //end if y to delete
+
+                else if (ch == n){ //if n to delete, cancel transaction
+                    printf("Transaction cancelled.\n");
+
+                }
+
+            }
+            else if (itemFound = 0){ //open ngst file
+
+                    ngstText = fopen("ngst.txt", "r");
+
+                while (!feof(ngstText)){ // check if item code matches in ngst.txt
+                    fscanf(ngstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
+                    if (strcmp(itemCodeInput, itemCode) == 0) {
+                    itemFound = 1;
+                    break;
+			}
+
+            }
+
+            if (itemFound = 1){ //if matches ngst
+
+            printf("Item found.\n\n");
+			puts("Code       Name                     Price      Stock");
+			printf("%-10s %-24s %-10.2lf %-10d\n", itemCode, itemName, price, quantity);
+
+            printf("Confirm to delete item? (y/n)\n");
+            ch = getchar();
+            scanf("%c", ch);
+
+            if (ch == y){
+
+                if (quantity != 0){
+                    printf("Stock is not zero. Item cannot be deleted.\n");
+                }
+                else if (quantity == 0){
+                    tempNgst = fopen("tempNgst.txt", "w");
+
+                    while (!feof(ngstText)){
+                            if ((strcmp(itemCodeInput, itemCode) != 0) && (quantity != 0)){
+                            fscanf(ngstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
+                            fprintf(tempNgst, "%s ; %s ; %.2lf ; %d\n", itemCode, itemName, price, quantity);
+                            }
+                        }
+
+                        }
+                        fclose(ngstText);
+                        fclose(tempNgst);
+                        remove("ngst.txt");
+                        rename("tempNgst.txt", "ngst.txt");
+
+                        printf("Item deleted\n");
+
+                } else if (ch == n){
+                    printf("Transaction cancelled.\n");
+
+                }
+
+            } //end item found
+
+            } // end if item found in ngst
+
+            printf("\nEnter item code to be deleted: ");
+            scanf("%s", itemCodeInput);
+
+        } // end of while(strcmp)
+
+        printf("Transaction cancelled\n");
+}
