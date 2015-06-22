@@ -1,6 +1,6 @@
 /*-------------------------------------------------------------------
 */
-/* ITS60304– Assignment #1 */
+/* ITS60304– Assignment #2 */
 /* C Programming */
 /* Student Name: <Wan Yee Xiong> <Karen Sim Tze Mien> */
 /* Student ID: <0324206> <0322562> */
@@ -117,26 +117,21 @@ int main(void)
 				break;
 				
 			case 3:
-				puts("This option allows user to update items.");
-				cont();
-				break;
-				
-			case 4:
 				delete();
 				cont();
 				break;
 				
-			case 5:
+			case 4:
 				showInventory();
 				cont();
 				break;
 				
-			case 6:
+			case 5:
 				showTransactions();
 				cont();
 				break;
 				
-			case 7:
+			case 6:
 				loopMenu = NO;
 				break;
 				
@@ -158,6 +153,9 @@ void purchase(void)
 {
 	FILE *backupGst;
 	FILE *backupNgst;
+	FILE *file;
+	char fileName[MAXCHAR];
+	FILE *temp;
 	char itemCodeInput[CODELENGTH];
 	char itemCode[CODELENGTH];
 	char itemName[MAXCHAR];
@@ -185,22 +183,26 @@ void purchase(void)
 		return;
 	}
 	transactionsText = fopen("transactions.txt", "w");
+	backupGst = fopen("backupGst.txt", "w");
+	backupNgst = fopen("backupNgst.txt", "w");
 	fclose(transactionsText);
 
 	// creating backups
 	fscanf(gstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
 	while (!feof(gstText)){ //write in new file
-        fscanf(gstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
         fprintf(backupGst, "%s;%s;%.2lf;%d\n", itemCode, itemName, price, quantity);
+        fscanf(gstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
 	}
     rewind(gstText);
+    fclose(backupGst);
 
-    fscanf(gstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
-    while (!feof(gstText)){ //write in new file
-        fscanf(gstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
+    fscanf(ngstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
+    while (!feof(ngstText)){ //write in new file
         fprintf(backupGst, "%s;%s;%.2lf;%d\n", itemCode, itemName, price, quantity);
+        fscanf(ngstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
 	}
-    rewind(gstText);
+    rewind(ngstText);
+    fclose(backupNgst);
 
 	itemFound = NO;
 
@@ -210,23 +212,27 @@ void purchase(void)
 	while(strcmp(itemCodeInput, "-1") && strcmp(itemCodeInput, "c")) {
 		fscanf(gstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
 		while(!feof(gstText)) {
-			fscanf(gstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
 			if (strcmp(itemCodeInput, itemCode) == 0) {
 				itemFound = YES;
 				isGST = YES;
+				file = gstText;
+				strcpy(fileName, "gst.txt");
 				break;
 			}
+			fscanf(gstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
 		}
 
 		if (itemFound == NO) {
 			fscanf(ngstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
 			while(!feof(ngstText)) {
-				fscanf(ngstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
 				if (strcmp(itemCodeInput, itemCode) == 0) {
 					itemFound = YES;
 					isGST = NO;
+					file = ngstText;
+					strcpy(fileName, "ngst.txt");
 					break;
 				}
+				fscanf(ngstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
 			}
 		}		
 
@@ -276,7 +282,29 @@ void purchase(void)
 					fclose(transactionsText);
 
 					// Deduct quantity
+					rewind(file);
+				    if ((file = fopen(fileName, "r")) != NULL) {
+				        temp = fopen("temp.txt", "w"); //open new file to write
 
+				        fscanf(file, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
+				        while (!feof(file)){ //write in new file
+				            if (strcmp(itemCodeInput, itemCode) == 0) {
+				                fprintf(temp, "%s;%s;%.2lf;%d\n", itemCode, itemName, price, quantity - quantityInput);
+				            }
+				            else {
+				            	fprintf(temp, "%s;%s;%.2lf;%d\n", itemCode, itemName, price, quantity);
+				            }
+				            fscanf(file, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
+				        }
+
+				        fclose(temp);
+				        fclose(file);
+				        remove(fileName);
+				        rename("temp.txt", fileName);
+				    } 
+				    else {
+				        puts("The file could no be found");
+				    } // end of deduct quantity
 
 					flush = getchar();
 					cont();
@@ -353,12 +381,19 @@ void purchase(void)
 		printf("Print receipt? (%c/%c): ", yesReceipt, noReceipt);
 		flush = getchar();
 		printReceipt(yesReceipt, noReceipt, itemCode, itemName, price, quantity);
+
+		fclose(gstText);
+		fclose(ngstText);
 	}
-	else
+	else {
 		puts("Transaction canceled"); // End of Receipt
 
-	fclose(gstText);
-	fclose(ngstText);
+		// restore backups
+		remove("gst.txt");
+		rename("backupGst.txt", "gst.txt");
+		remove("ngst.txt");
+		rename("backupNgst.txt", "ngst.txt");
+	}
 
 	return;
 } // end of Purchase
@@ -416,12 +451,12 @@ void edit(void)
         fscanf(text.fp, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
         while (!feof(text.fp)) { // check if item match in gst.txt
             text.fp = gstText;
-            fscanf(text.fp, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
             if (strcmp(itemCodeInput, itemCode) == 0) {
                 itemFound = YES;
                 strcpy(text.name, "gst.txt");
                 break;
             }
+            fscanf(text.fp, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
         }
         rewind(text.fp);
 
@@ -429,12 +464,12 @@ void edit(void)
         	text.fp = ngstText;
         	fscanf(text.fp, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
             while (!feof(text.fp)) { // check if item match in ngst.txt
-                fscanf(text.fp, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
                 if (strcmp(itemCodeInput, itemCode) == 0) {
                     itemFound = YES;
                     strcpy(text.name, "ngst.txt");
                     break;
                 }
+                fscanf(text.fp, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
             }
             rewind(text.fp);
         }
@@ -498,13 +533,13 @@ void edit(void)
             temp = fopen("temp.txt", "w");
             fscanf(text.fp, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
             while (!feof(text.fp)){ //printing
-	            fscanf(text.fp, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
 	            if (strcmp(itemCodeInput, itemCode) == 0){ 
 	                fprintf(temp, "%s;%s;%.2lf;%d\n", itemCodeInput, newItemName, newPrice, newQuantity);
 	            }
 	            else {
 	            	fprintf(temp, "%s;%s;%.2lf;%d\n", itemCode, itemName, price, quantity); 
 	            }
+	            fscanf(text.fp, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
 	        }
 
 	        fclose(temp);
@@ -527,7 +562,7 @@ void edit(void)
 
 }
 
-// Option 4: Delete Items
+// Option 3: Delete Items
 void delete(void)
 {
     char itemCodeInput[8];
@@ -568,23 +603,23 @@ void delete(void)
 
         fscanf(gstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
 		while(!feof(gstText)) { // check if item code matches in gst.txt
-			fscanf(gstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
 			if (strcmp(itemCodeInput, itemCode) == 0) {
 				itemFound = 1;
                 gst = 1;
 				break;
 			}
+			fscanf(gstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
 		} 
 
         if (itemFound == NO) { //open ngst file
 
         	fscanf(ngstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
             while (!feof(ngstText)) { // check if item code matches in ngst.txt
-                fscanf(ngstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
                 if (strcmp(itemCodeInput, itemCode) == 0) {
                     itemFound = 1;
                     break;
                 }
+                fscanf(ngstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
             }
         }
         fclose(gstText);
@@ -662,7 +697,7 @@ void delete(void)
 } // end of delete
 
 
-// Option 5: Show Inventory
+// Option 4: Show Inventory
 void showInventory(void)
 {  
 	char itemCode[6];
@@ -707,6 +742,7 @@ void showInventory(void)
 	return;
 } // end of showInventory
 
+// Option 5: Show daily transactions
 void showTransactions(void)
 {
 	puts("------------------------------------");
@@ -729,11 +765,10 @@ void printMenu(void)
 	puts("------------------------------------");
 	puts("1. Purchase items");
 	puts("2. Edit items");
-	puts("3. Update items");
-	puts("4. Delete items");
-	puts("5. Show inventory");
-	puts("6. Show daily transaction");
-	puts("7. Exit");
+	puts("3. Delete items");
+	puts("4. Show inventory");
+	puts("5. Show daily transaction");
+	puts("6. Exit");
 	puts("");
 	puts("------------------------------------");
 	puts("");
