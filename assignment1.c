@@ -45,10 +45,55 @@ void replaceFile(char fileName[25], char itemCodeInput[8]);
 
 int main(void)
 {
+	FILE *tempGst;
+	FILE *tempNgst;
+	char menuInput[MAXCHAR];
+	char itemCode[CODELENGTH];
+	char itemName[MAXCHAR];
+	double price;
+	int quantity;
 	int convertedMenuInput;
 	int loopMenu = YES;
 	int badInput = NO;
-	char menuInput[MAXCHAR];
+
+	// Conforming files to standard
+
+	if ((gstText = fopen("gst.txt", "r")) == NULL ) {
+		puts("The file 'gst.txt' could not be opened");
+		puts("Please contact your system administrator.");
+		return;
+	}
+	else if ((ngstText = fopen("ngst.txt", "r")) == NULL ) {
+		puts("The file 'ngst.txt' could not be opened");
+		puts("Please contact your system administrator.");
+		return;
+	}
+
+	tempGst = fopen("tempGst.txt", "w");
+	fscanf(gstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
+    while (!feof(gstText)){ //write in new file
+        fprintf(tempGst, "%s;%s;%.2lf;%d\n", itemCode, itemName, price, quantity);
+        fscanf(gstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
+    }
+
+    fclose(tempGst);
+    fclose(gstText);
+    remove("gst.txt");
+    rename("tempGst.txt", "gst.txt");
+
+    tempNgst = fopen("tempGst.txt", "w");
+	fscanf(ngstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
+    while (!feof(ngstText)){ //write in new file
+        fprintf(tempNgst, "%s;%s;%.2lf;%d\n", itemCode, itemName, price, quantity);
+        fscanf(ngstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
+    }
+
+    fclose(tempNgst);
+    fclose(ngstText);
+    remove("ngst.txt");
+    rename("tempNgst.txt", "ngst.txt");
+
+    // end of standardizing
 
 	system("clear");
 
@@ -147,12 +192,14 @@ void purchase(void)
 	fclose(transactionsText);
 
 	// creating backups
+	fscanf(gstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
 	while (!feof(gstText)){ //write in new file
         fscanf(gstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
         fprintf(backupGst, "%s;%s;%.2lf;%d\n", itemCode, itemName, price, quantity);
 	}
     rewind(gstText);
 
+    fscanf(gstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
     while (!feof(gstText)){ //write in new file
         fscanf(gstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
         fprintf(backupGst, "%s;%s;%.2lf;%d\n", itemCode, itemName, price, quantity);
@@ -165,24 +212,26 @@ void purchase(void)
 	printf("Enter the item code: ");
 	scanf("%s", itemCodeInput);
 	while(strcmp(itemCodeInput, "-1") && strcmp(itemCodeInput, "c")) {
-		do {
+		fscanf(gstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
+		while(!feof(gstText)) {
 			fscanf(gstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
 			if (strcmp(itemCodeInput, itemCode) == 0) {
 				itemFound = YES;
 				isGST = YES;
 				break;
 			}
-		} while(!feof(gstText));
+		}
 
 		if (itemFound == NO) {
-			do {
+			fscanf(ngstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
+			while(!feof(ngstText)) {
 				fscanf(ngstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
 				if (strcmp(itemCodeInput, itemCode) == 0) {
 					itemFound = YES;
 					isGST = NO;
 					break;
 				}
-			} while(!feof(ngstText));
+			}
 		}		
 
 		// Quantity Prompt
@@ -368,7 +417,8 @@ void edit(void)
 
         itemFound = NO;
 
-        do { // check if item match in gst.txt
+        fscanf(text.fp, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
+        while (!feof(text.fp)) { // check if item match in gst.txt
             text.fp = gstText;
             fscanf(text.fp, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
             if (strcmp(itemCodeInput, itemCode) == 0) {
@@ -376,19 +426,20 @@ void edit(void)
                 strcpy(text.name, "gst.txt");
                 break;
             }
-        } while (!feof(text.fp));
+        }
         rewind(text.fp);
 
         if (itemFound == NO){
         	text.fp = ngstText;
-            do { // check if item match in ngst.txt
+        	fscanf(text.fp, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
+            while (!feof(text.fp)) { // check if item match in ngst.txt
                 fscanf(text.fp, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
                 if (strcmp(itemCodeInput, itemCode) == 0) {
                     itemFound = YES;
                     strcpy(text.name, "ngst.txt");
                     break;
                 }
-            } while (!feof(text.fp));
+            }
             rewind(text.fp);
         }
         
@@ -449,7 +500,8 @@ void edit(void)
             }
 
             temp = fopen("temp.txt", "w");
-            do{ //printing
+            fscanf(text.fp, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
+            while (!feof(text.fp)){ //printing
 	            fscanf(text.fp, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
 	            if (strcmp(itemCodeInput, itemCode) == 0){ 
 	                fprintf(temp, "%s;%s;%.2lf;%d\n", itemCodeInput, newItemName, newPrice, newQuantity);
@@ -457,7 +509,7 @@ void edit(void)
 	            else {
 	            	fprintf(temp, "%s;%s;%.2lf;%d\n", itemCode, itemName, price, quantity); 
 	            }
-	        }while (!feof(text.fp));
+	        }
 
 	        fclose(temp);
         	remove(text.name);
@@ -518,6 +570,7 @@ void delete(void)
         itemFound = NO;
         gst = NO;
 
+        fscanf(gstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
 		while(!feof(gstText)) { // check if item code matches in gst.txt
 			fscanf(gstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
 			if (strcmp(itemCodeInput, itemCode) == 0) {
@@ -529,6 +582,7 @@ void delete(void)
 
         if (itemFound == NO) { //open ngst file
 
+        	fscanf(ngstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
             while (!feof(ngstText)) { // check if item code matches in ngst.txt
                 fscanf(ngstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
                 if (strcmp(itemCodeInput, itemCode) == 0) {
