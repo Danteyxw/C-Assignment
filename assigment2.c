@@ -55,9 +55,10 @@ int main(void)
 	int convertedMenuInput;
 	int loopMenu = YES;
 	int badInput = NO;
+	char a;
+	char b;
 
 	// Conforming files to standard
-
 	if ((gstText = fopen("gst.txt", "r")) == NULL ) {
 		puts("The file 'gst.txt' could not be opened");
 		puts("Please contact your system administrator.");
@@ -69,30 +70,25 @@ int main(void)
 		return;
 	}
 
-	tempGst = fopen("tempGst.txt", "w");
-	fscanf(gstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
-    while (!feof(gstText)){ //write in new file
-        fprintf(tempGst, "%s;%s;%.2lf;%d\n", itemCode, itemName, price, quantity);
-        fscanf(gstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
-    }
+	fseek(gstText, -1, SEEK_END);
+	fseek(ngstText, -1, SEEK_END);
 
-    fclose(tempGst);
-    fclose(gstText);
-    remove("gst.txt");
-    rename("tempGst.txt", "gst.txt");
+	fscanf(gstText, "%c", &a);
+	fscanf(ngstText, "%c", &b);
 
-    tempNgst = fopen("tempGst.txt", "w");
-	fscanf(ngstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
-    while (!feof(ngstText)){ //write in new file
-        fprintf(tempNgst, "%s;%s;%.2lf;%d\n", itemCode, itemName, price, quantity);
-        fscanf(ngstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
-    }
+	fclose(gstText);
+	fclose(ngstText);
 
-    fclose(tempNgst);
-    fclose(ngstText);
-    remove("ngst.txt");
-    rename("tempNgst.txt", "ngst.txt");
+	gstText = fopen("gst.txt", "a");
+	ngstText = fopen("ngst.txt", "a");
 
+	if (a != '\n')
+		fprintf(gstText, "\n");
+	if (b != '\n')
+		fprintf(ngstText, "\n");
+
+	fclose(gstText);
+	fclose(ngstText);
     // end of standardizing
 
 	system("clear");
