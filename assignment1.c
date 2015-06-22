@@ -115,6 +115,8 @@ int main(void)
 // Option 1: Purchase
 void purchase(void)
 {
+	FILE *backupGst;
+	FILE *backupNgst;
 	char itemCodeInput[CODELENGTH];
 	char itemCode[CODELENGTH];
 	char itemName[MAXCHAR];
@@ -143,6 +145,19 @@ void purchase(void)
 	}
 	transactionsText = fopen("transactions.txt", "w");
 	fclose(transactionsText);
+
+	// creating backups
+	while (!feof(gstText)){ //write in new file
+        fscanf(gstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
+        fprintf(backupGst, "%s;%s;%.2lf;%d\n", itemCode, itemName, price, quantity);
+	}
+    rewind(gstText);
+
+    while (!feof(gstText)){ //write in new file
+        fscanf(gstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
+        fprintf(backupGst, "%s;%s;%.2lf;%d\n", itemCode, itemName, price, quantity);
+	}
+    rewind(gstText);
 
 	itemFound = NO;
 
@@ -214,6 +229,9 @@ void purchase(void)
 					}
 
 					fclose(transactionsText);
+
+					// Deduct quantity
+
 
 					flush = getchar();
 					cont();
@@ -786,11 +804,12 @@ void replaceFile(char fileName[25], char itemCodeInput[8]) {
     if ((file = fopen(fileName, "r")) != NULL) {
         temp = fopen("temp.txt", "w"); //open new file to write
 
+        fscanf(file, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
         while (!feof(file)){ //write in new file
-            fscanf(file, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
-            if (strcmp(itemCodeInput, itemCode) != 0) { //avoid the deleted item
+            if (strcmp(itemCodeInput, itemCode) != 0) {
                 fprintf(temp, "%s;%s;%.2lf;%d\n", itemCode, itemName, price, quantity);
             }
+            fscanf(file, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
         }
 
         fclose(temp);
