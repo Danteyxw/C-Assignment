@@ -30,6 +30,7 @@ double ngstSales;
 void purchase(void);
 void showInventory(void);
 void showTransactions(void);
+void edit(void);
 void delete(void);
 
 void printMenu(void);
@@ -70,7 +71,7 @@ int main(void)
 				break;
 				
 			case 2:
-				puts("This option allows user to edit items.");
+				edit();
 				cont();
 				break;
 				
@@ -298,6 +299,167 @@ void purchase(void)
 
 	return;
 } // end of Purchase
+
+// Option 2: Edit Items
+void edit(void)
+{
+	typedef struct
+	{
+		char name[MAXCHAR];
+		FILE *fp;
+	} textFile;
+
+	textFile text;
+
+    char itemCode[8];
+    char itemName[25];
+    double price;
+    int quantity;
+    FILE *temp;
+	char itemCodeInput[8];
+	int itemFound;
+	int Name = 1;
+	int Price = 2;
+	int Quantity = 3;
+	int choice;
+	char newItemName[30];
+	double newPrice;
+	int newQuantity;
+
+	puts("------------------------------------");
+	puts("Edit Items");
+	puts("------------------------------------");
+	puts("Enter -1 to cancel transaction");
+	puts("");
+
+	printf("Enter the item code to be edited: ");
+	scanf("%s", itemCodeInput);
+
+	if((gstText = fopen("gst.txt", "r")) == NULL){
+        puts("File not found.");
+        puts("Please contact your system administrator.");
+        return;
+	}
+    else if ((ngstText = fopen("ngst.txt", "r")) == NULL){
+        puts("File not found.");
+        puts("Please contact your system administrator.");
+        return;
+    }
+
+	while (strcmp(itemCodeInput, "-1") != 0){ //start transaction??
+
+        itemFound = NO;
+
+        do { // check if item match in gst.txt
+            text.fp = gstText;
+            fscanf(text.fp, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
+            if (strcmp(itemCodeInput, itemCode) == 0) {
+                itemFound = YES;
+                strcpy(text.name, "gst.txt");
+                break;
+            }
+        } while (!feof(text.fp));
+        rewind(text.fp);
+
+        if (itemFound == NO){
+        	text.fp = ngstText;
+            do { // check if item match in ngst.txt
+                fscanf(text.fp, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
+                if (strcmp(itemCodeInput, itemCode) == 0) {
+                    itemFound = YES;
+                    strcpy(text.name, "ngst.txt");
+                    break;
+                }
+            } while (!feof(text.fp));
+            rewind(text.fp);
+        }
+        
+        if (itemFound == NO){ //if item cant be found
+            puts("Item cannot be found.");
+        }
+
+        else if (itemFound == YES){ //if item found
+            printf ("Item found\n\n");
+            //print out selected item
+			puts("Code       Name                     Price      Stock");
+			printf("%-10s %-24s %-10.2lf %-10d\n", itemCode, itemName, price, quantity);
+            puts("");
+
+            flush = getchar();
+            puts("Which would you like to edit?");
+            puts("1. Name");
+            puts("2. Price");
+            puts("3. Quantity");
+            scanf("%d", &choice);
+
+            for(;;) {
+            	if (choice == Name){ //If 1 chosen
+	                printf("Change name of item.\n");
+	                printf("Please enter the new name: ");
+	                scanf(" %24[^\n]", newItemName); //get the new name of the item
+
+	                newPrice = price;
+	                newQuantity = quantity;
+	                break;
+	            }
+
+	            else if (choice == Price){ //If 2 chosen
+	                printf("Change the price of item.\n");
+	                printf("Please enter the new price: ");
+	                scanf(" %lf", &newPrice); //get the new price of the item
+
+	                strcpy(newItemName, itemName);
+	                newQuantity = quantity;
+	                break;
+	            }
+
+	            else if (choice == Quantity){ //If 3 chosen
+	                printf("Change the quantity of item.\n");
+	                printf("Please enter the new quantity: ");
+	                scanf(" %d", &newQuantity); //get the new quantity of the item
+
+	                strcpy(newItemName, itemName);
+	                newPrice = price;
+	                break;
+	            }
+	            else {
+	                puts("Invalid input. Please enter any of the following");
+	                puts("1. Name");
+	                puts("2. Price");
+	                puts("3. Quantity");
+	            }
+            }
+
+            temp = fopen("temp.txt", "w");
+            do{ //printing
+	            fscanf(text.fp, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
+	            if (strcmp(itemCodeInput, itemCode) == 0){ 
+	                fprintf(temp, "%s;%s;%.2lf;%d\n", itemCodeInput, newItemName, newPrice, newQuantity);
+	            }
+	            else {
+	            	fprintf(temp, "%s;%s;%.2lf;%d\n", itemCode, itemName, price, quantity); 
+	            }
+	        }while (!feof(text.fp));
+
+	        fclose(temp);
+        	remove(text.name);
+        	rename("temp.txt", text.name);
+
+        } //end to if item found
+
+        rewind(text.fp);
+
+        printf("Enter the item code to be edited: ");
+        scanf("%s", itemCodeInput);
+
+    } //end to while loop
+
+    fclose(gstText);
+    fclose(ngstText);
+
+    puts("Exited.");
+
+}
 
 // Option 4: Delete Items
 void delete(void)
